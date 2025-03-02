@@ -6,6 +6,7 @@ WORKDIR /app
 
 # 安装系统依赖
 #RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y tzdata
 
 # 设置环境变量
 ENV PICA_SECRET_KEY="" \
@@ -16,13 +17,14 @@ ENV PICA_SECRET_KEY="" \
     DETAIL="False" \
     REQUEST_TIME_OUT="10" \
     CHANGE_FAVOURITE="False" \
-    DELETE_COMIC="True"
+    DELETE_COMIC="True" \
+    TZ="Asia/Shanghai"
 
 # 将当前目录内容复制到工作目录中
 COPY . /app
 
 # 安装依赖项
-RUN pip install --no-cache-dir requests urllib3
+RUN pip install --no-cache-dir requests urllib3 pytz
 
 # 指定容器启动时执行的命令
 CMD ["python", "main.py"]

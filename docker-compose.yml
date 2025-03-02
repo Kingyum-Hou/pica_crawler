@@ -4,7 +4,8 @@ services:
     image: yuanzhangzcc/picacg-download:latest
     container_name: picacg-download-container
     volumes:
-      - ./comics/bika:/app/comics
+      - ./comics:/app/comics
+      - ./comics_origin_backUp:/app/comics_origin_backUp
       - ./output:/app/output
       - ./logs:/app/logs
       - ./data:/app/data

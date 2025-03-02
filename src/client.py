@@ -6,11 +6,11 @@ from configparser import ConfigParser
 from datetime import datetime
 from time import time
 from urllib.parse import urlencode
-import logging
+import inspect
 
 import requests
 import urllib3
-from util import get_cfg
+from utils import get_cfg
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -47,11 +47,19 @@ class Pica:
             proxies = {'http': proxy, 'https': proxy}
         else:
             proxies = None
-        response = self.__s.request(
-            method=method, url=url, verify=False, 
-            proxies=proxies, timeout=self.timeout, **kwargs
-        )
-        return response
+        
+        try:
+            response = self.__s.request(
+                method=method, url=url, verify=False, 
+                proxies=proxies, timeout=self.timeout, **kwargs
+            )
+            return response
+        except requests.exceptions.Timeout as e:
+            parent_function = inspect.stack()[1].function
+            raise requests.exceptions.Timeout(f"Request Timeout Error occurred in function:'{parent_function}'")
+        except requests.exceptions.RequestException as e:
+            parent_function = inspect.stack()[1].function
+            raise requests.exceptions.RequestException(f"Request Other Error occurred in function:'{parent_function}'")
 
     def login(self):
         url = base + "auth/sign-in"
@@ -109,20 +117,27 @@ class Pica:
             # while 'pages' indicates the number of pages needed to paginate the chapter data.
             total_pages    = first_page_data["data"]["eps"]["pages"]
             total_episodes = first_page_data["data"]["eps"]["total"]
-            episode_list  = list(first_page_data["data"]["eps"]["docs"])
+            episode_list   = list(first_page_data["data"]["eps"]["docs"])
+            if 'episode_list' not in locals():
+                raise NameError(f"Missing episode in Comic {title}")
             while total_pages > 1:
                 additional_episodes = self.episodes(book_id, total_pages).json()["data"]["eps"]["docs"]
                 episode_list.extend(list(additional_episodes))
                 total_pages -= 1
             episode_list = sorted(episode_list, key=lambda x: x['order'])
             if len(episode_list) != total_episodes:
-                raise Exception('wrong number of episodes,expect:' + 
+                raise Exception(
+                    'wrong number of episodes, expect:' + 
                     total_episodes + ',actual:' + len(episode_list)
                 )
         except KeyError as e:
-            logging.error(f"Comic {title} has been MISSING. KeyError: {e}")
+            raise Exception(f"Comic:'{title}' has been MISSING. KeyError: {e}")
+        except NameError as e:
+            episode_list = []  # 给 episode_list 赋一个默认值
+            print(f"Episodes information not found in Comic:'{title}'. The 'episode_list' has been assigned an empty value")
+            return episode_list
         except Exception as e:
-            logging.error(f"An error occurred while fetching episodes for comic {title}. Error: {e}")
+            raise Exception(f"An Other error occurred while fetching episodes for Comic:'{title}'. Error: {e}")
         return episode_list
 
     # 根据章节获取图片

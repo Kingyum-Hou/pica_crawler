@@ -10,3 +10,9 @@ comics/*
 config/config.ini
 .vscode
 .env
+pica_crawler.tar
+.pytest*
+test/*
+comics_origin_backUp/*
+data/*
+output/*

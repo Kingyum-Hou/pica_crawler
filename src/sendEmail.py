@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from randomString import get_random_str
-from util import *
+from utils import *
 
 if not os.path.exists("./comics"):
     os.mkdir('./comics')
